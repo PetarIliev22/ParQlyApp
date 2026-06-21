@@ -1,0 +1,4 @@
+export const supabaseClient = window.supabase.createClient(
+  "https://sxkwiwzeemnqvjgctvva.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4a3dpd3plZW1ucXZqZ2N0dnZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMzQ1ODksImV4cCI6MjA3ODYxMDU4OX0.PziZ3Rpo5iw0DAGC6MMenikjwndHNSM5dzeWAdxX0Mo"
+)

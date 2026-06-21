@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <title>ParQly | Payment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="./assets/logo.png" alt="Logo">
+        </div>
+
+        
+        <div id="searchSection" class="input-container">
+            <div class="header-section">
+                <h1>Park & Pay</h1>
+                <p>Enter your vehicle's license plate or registered phone number to pay for your parking.</p>
+            </div>
+            <div class="input-wrapper">
+                <span class="input-icon"><i class="bi bi-car-front-fill"></i></span>
+                <input type="text" id="plate_text" placeholder="Enter License Plate (e.g., CB1234XY)"/>
+            </div>
+            
+            <button id="checkbtn">SEARCH</button>
+            <p class="terms-text">
+                By continuing, you agree to our <br>
+                <strong>Terms, Conditions, and Parking Policy.</strong>
+            </p>
+        </div>
+        
+        <div id="messageDiv" class="error-box">
+            <div class="error-icon">
+                <img src="./assets/error.png" alt="Error Icon" width="100">
+            </div>
+
+            <div class="error-content">
+                <h3>Operation Failed</h3>
+                <p id="message">Something went wrong. Please try again.</p>
+            </div>
+
+            <button id="tryAgain">Try Again</button>
+        </div>
+        
+        <div id="loadingScreen" style="display: none;">
+            <div class="components">
+
+                <img src="./assets/logo2.png" alt="Logo" width="100">
+
+                <div id="animationHolder"></div>
+
+                <h2 class="loading-title">Checking Your Vehicle</h2>
+
+                <span class="loading-text">
+                    Retrieving parking session details<span class="dots"></span>
+                </span>
+
+                <p class="wait-text">We're securely retrieving your vehicle and parking session information.</p>
+
+            </div>
+        </div>
+
+        <div id="resultSection" class="hidden">
+            <p id="carInfo"></p>
+            <button id="paybtn">Pay</button>
+            <p style="margin-top: 12px; font-weight: 600; font-size: 0.7em; color: #858585; "><em>First 10 minutes are free - 0.60€ / per hour.</em></p>
+            <div id="paymentImages">
+                <img src="./assets/master-card.png" alt="Mastercard" width="45">
+                <img src="./assets/visa.png" alt="Visa" width="45">
+                <img src="./assets/pay.png" alt="Apple Pay" width="45">
+            </div>
+        </div>
+        
+        <div id="successPopup" class="popup">
+            <div class="popup-content">
+                <img src="./assets/check.png" width="60">
+                <h2>Payment completed successfully</h2>
+                <p id="licensePlate"></p>
+                <button id="popupBtn">CLOSE</button>
+            </div>
+        </div>
+        
+    </div>
+    <div class="illustration">
+        <img src="./assets/down_image.jpg" alt="Parking App Illustration">
+    </div>
+
+    <script src="./js/main.js" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.14/dist/dotlottie-wc.js" type="module"></script>
+</body>
+</html>
