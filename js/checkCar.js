@@ -156,7 +156,7 @@ async function handlePayment(car, fee, now) {
         font-size: 15px;
         opacity: 0.85;
       ">
-        Thank you for using <strong>Park & Pay</strong>.
+        Thank you for using <strong>Park & Pay</strong>!
       </div>
 
     </div>
@@ -180,7 +180,7 @@ checkBtn.addEventListener("click", async () => {
   showLoading();
 
   if (!plate) {
-    showMessage(`No license plate provided. Please enter a valid license plate.`);
+    showMessage(`No license plate provided. Please enter a license plate and try again to search for a vehicle.`);
     return;
   }
 
@@ -197,7 +197,7 @@ checkBtn.addEventListener("click", async () => {
   }
 
   if (!data.length) {
-    showMessage(`Cannot find a vehicle with the provided <strong>${plate}</strong> license plate.`);
+    showMessage(`Cannot find a vehicle with the provided license plate <strong>${plate}</strong>. Please check the license plate and try again.`);
     return;
   }
 
