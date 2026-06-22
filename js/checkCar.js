@@ -1,4 +1,5 @@
 import { supabaseClient } from "./supabase.js";
+import { successAnimation } from "./animationCheckIcon.js";
 
 const tryAgain = document.getElementById("tryAgain");
 const resultDiv = document.getElementById("resultSection");
@@ -163,7 +164,9 @@ async function handlePayment(car, fee, now) {
   `;
 
   const successSound = new Audio("./sound/success.mp3");
+
   successSound.play();
+  successAnimation.play();
 
   document.getElementById("successPopup").style.display = "flex";
 }
