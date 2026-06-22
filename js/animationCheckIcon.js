@@ -1,7 +1,9 @@
- export const successAnimation = lottie.loadAnimation({
-      container: document.getElementById('successAnimation'),
-      renderer: 'svg',
-      loop: false,
-      autoplay: false, 
-      path: './assets/Loottie/success.json' 
-  });
+export function createLottie(containerId, path, loop = false, autoplay = false) {
+    return lottie.loadAnimation({
+        container: document.getElementById(containerId),
+        renderer: 'svg',
+        loop,
+        autoplay,
+        path
+    });
+}

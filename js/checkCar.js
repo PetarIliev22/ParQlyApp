@@ -1,34 +1,46 @@
 import { supabaseClient } from "./supabase.js";
-import { successAnimation } from "./animationCheckIcon.js";
+import { createLottie } from "./animationCheckIcon.js";
 
-const tryAgain = document.getElementById("tryAgain");
-const resultDiv = document.getElementById("resultSection");
-const checkBtn = document.getElementById("checkbtn");
-const payBtn = document.getElementById("paybtn");
-const carInfo = document.getElementById("carInfo");
-const messageDiv = document.getElementById("messageDiv");
-const messageParagraph = document.getElementById("message");
-const licensePlate = document.getElementById("licensePlate");
-const loadingScreen = document.getElementById("loadingScreen");
-const plateInput = document.getElementById("plate_text");
-const аnimationHolder = document.getElementById("animationHolder");
+const elements = {
+  tryAgain: document.getElementById("tryAgain"),
+  resultDiv: document.getElementById("resultSection"),
+  checkBtn: document.getElementById("checkbtn"),
+  payBtn: document.getElementById("paybtn"),
+  carInfo: document.getElementById("carInfo"),
+  messageDiv: document.getElementById("messageDiv"),
+  messageParagraph: document.getElementById("message"),
+  licensePlate: document.getElementById("licensePlate"),
+  loadingScreen: document.getElementById("loadingScreen"),
+  plateInput: document.getElementById("plate_text"),
+  animationHolder: document.getElementById("animationHolder"),
+  successPopup: document.getElementById("successPopup"),
+  popupBtn: document.getElementById("popupBtn")
+};
 
-tryAgain.addEventListener("click", () => window.location.reload());
-document.getElementById("popupBtn").addEventListener("click", () => window.location.reload());
+const FREE_MINUTES = 10;
+const PRICE_PER_HOUR = 0.6;
+const LOADING_TIME = 2700;
 
-function showLoading() {
-    loadingScreen.style.display = "flex";
+const CYRILLIC_TO_LATIN_MAP = {
+  "А": "A", "В": "B", "Е": "E", "К": "K", "М": "M",
+  "Н": "H", "О": "O", "Р": "P", "С": "C", "Т": "T",
+  "У": "Y", "Х": "X"
+};
 
-    animationHolder.innerHTML = `
-      <img src="./assets/animation.svg?t=${Date.now()}" 
-          class="loading-image" 
-          alt="Loading">
-    `;
+elements.tryAgain.addEventListener("click", reloadPage);
+elements.popupBtn.addEventListener("click", reloadPage);
+elements.checkBtn.addEventListener("click", handleCheckPlate);
 
-    setTimeout(() => {
-        loadingScreen.style.display = "none";
-        animationHolder.innerHTML = "";
-    }, 2700);
+function reloadPage() {
+  window.location.reload();
+}
+
+function normalizePlate(value) {
+  return value
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "")
+    .replace(/./g, char => CYRILLIC_TO_LATIN_MAP[char] || char);
 }
 
 function formatTime(date) {
@@ -48,69 +60,79 @@ function calculateFee(entryTime) {
 
   const hours = Math.floor(durationMinutes / 60);
   const minutes = durationMinutes % 60;
-
   const durationText = `${hours} h ${minutes} min`;
 
   let parkingFee = 0;
 
-  if (durationMinutes > 10) {
-    const hoursAfterFree = Math.ceil((durationMinutes - 10) / 60);
-    parkingFee = hoursAfterFree * 0.6;
+  if (durationMinutes > FREE_MINUTES) {
+    const hoursAfterFree = Math.ceil((durationMinutes - FREE_MINUTES) / 60);
+    parkingFee = hoursAfterFree * PRICE_PER_HOUR;
   }
 
   return { parkingFee, durationText, now };
 }
 
+function showLoading() {
+  elements.loadingScreen.style.display = "flex";
+
+  elements.animationHolder.innerHTML = `
+    <img 
+      src="./assets/animation.svg?t=${Date.now()}" 
+      class="loading-image" 
+      alt="Loading"
+    >
+  `;
+
+  setTimeout(hideLoading, LOADING_TIME);
+}
+
+function hideLoading() {
+  elements.loadingScreen.style.display = "none";
+  elements.animationHolder.innerHTML = "";
+}
+
 function showMessage(text) {
-  resultDiv.style.display = "none";
-  messageDiv.style.display = "block";
-  messageParagraph.innerHTML = text;
+  elements.resultDiv.style.display = "none";
+  elements.messageDiv.style.display = "block";
+  elements.messageParagraph.innerHTML = text;
 }
 
 function renderCarInfo(car, entryTime, durationText, fee) {
-  carInfo.innerHTML = `
+  elements.carInfo.innerHTML = `
     <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">
+          <i class="bi bi-car-front-fill mr-1"></i> License Plate
+        </span>
+        <span class="info-value plate-badge">${car.plate_text}</span>
+      </div>
+
+      <div class="info-row">
         <div class="info-item">
-            <span class="info-label"><i class="bi bi-car-front-fill mr-1"></i> License Plate</span>
-            <span class="info-value plate-badge">${car.plate_text}</span>
-        </div>
-        
-        <div class="info-row">
-            <div class="info-item">
-                <span class="info-label"><i class="bi bi-clock mr-1"></i> Entry Time</span>
-                <span class="info-value small">${formatTime(entryTime)}</span>
-            </div>
-
-            <div class="info-item">
-                <span class="info-label"><i class="bi bi-stopwatch mr-1"></i> Duration</span>
-                <span class="info-value small">${durationText}</span>
-            </div>
+          <span class="info-label">
+            <i class="bi bi-clock mr-1"></i> Entry Time
+          </span>
+          <span class="info-value small">${formatTime(entryTime)}</span>
         </div>
 
-        <div class="price-highlight">
-            <span class="price-label">Total Amount</span>
-            <span class="price-value">${fee.toFixed(2)}€</span>
+        <div class="info-item">
+          <span class="info-label">
+            <i class="bi bi-stopwatch mr-1"></i> Duration
+          </span>
+          <span class="info-value small">${durationText}</span>
         </div>
+      </div>
+
+      <div class="price-highlight">
+        <span class="price-label">Total Amount</span>
+        <span class="price-value">${fee.toFixed(2)}€</span>
+      </div>
     </div>
   `;
 }
 
-async function handlePayment(car, fee, now) {
-  const { error } = await supabaseClient
-    .from("plates")
-    .update({
-      paid: true,
-      current_fee: fee,
-      paid_time: now
-    })
-    .eq("id", car.id);
-
-  if (error) {
-    console.error("Грешка:", error);
-    return;
-  }
-
-  licensePlate.innerHTML = `
+function renderSuccessPopup(car) {
+  elements.licensePlate.innerHTML = `
     <div style="
       max-width: 480px;
       margin: 0 auto;
@@ -121,11 +143,7 @@ async function handlePayment(car, fee, now) {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.14);
     ">
-
-      <div style="
-        margin-bottom: 20px;
-        font-size: 16px;
-      ">
+      <div style="margin-bottom: 20px; font-size: 16px;">
         License plate:
         <br>
         <span style="
@@ -136,7 +154,7 @@ async function handlePayment(car, fee, now) {
           font-size: 22px;
           font-weight: 700;
           letter-spacing: 1px;
-          background: rgba(255, 255, 255, 0.08);
+          background: rgb(243 243 243 / 84%);
         ">
           ${car.plate_text}
         </span>
@@ -150,69 +168,93 @@ async function handlePayment(car, fee, now) {
         font-weight: 600;
         background: rgba(255, 255, 255, 0.07);
       ">
-        You have 10 minutes to leave the parking lot.
+        You have ${FREE_MINUTES} minutes to leave the parking lot.
       </div>
 
-      <div style="
-        font-size: 15px;
-        opacity: 0.85;
-      ">
+      <div style="font-size: 15px; opacity: 0.85;">
         Thank you for using <strong>Park & Pay</strong>!
       </div>
-
     </div>
   `;
-
-  const successSound = new Audio("./sound/success.mp3");
-
-  successSound.play();
-  successAnimation.play();
-
-  document.getElementById("successPopup").style.display = "flex";
 }
 
-checkBtn.addEventListener("click", async () => {
-  const CYRYLLIC_TO_LATIN_MAP = {
-    "А": "A", "В": "B", "Е": "E", "К": "K", "М": "M",
-    "Н": "H", "О": "O", "Р": "P", "С": "C", "Т": "T",
-    "У": "Y", "Х": "X"
-  };
+function playSuccessSound() {
+  const successSound = new Audio("./sound/success.mp3");
+  successSound.play();
+}
 
-  const plate = plateInput.value.trim().toUpperCase().split(" ").join("").replace(/./g, (char) => CYRYLLIC_TO_LATIN_MAP[char] || char);
+function playSuccessAnimation() {
+  const successAnimation = createLottie(
+    "successAnimation",
+    "./assets/Lottie/success.json"
+  );
 
-  showLoading();
+  successAnimation.play();
+}
 
-  if (!plate) {
-    showMessage(`No license plate provided. Please enter a license plate and try again to search for a vehicle.`);
-    return;
-  }
+async function updatePayment(car, fee, now) {
+  return await supabaseClient
+    .from("plates")
+    .update({
+      paid: true,
+      current_fee: fee,
+      paid_time: now
+    })
+    .eq("id", car.id);
+}
 
-  const { data, error } = await supabaseClient
+async function getUnpaidCarByPlate(plate) {
+  return await supabaseClient
     .from("plates")
     .select("*")
     .ilike("plate_text", plate)
     .ilike("status", "IN")
     .eq("paid", false);
+}
+
+async function handlePayment(car, fee, now) {
+  const { error } = await updatePayment(car, fee, now);
 
   if (error) {
     console.error("Грешка:", error);
     return;
   }
 
+  renderSuccessPopup(car);
+  playSuccessSound();
+  playSuccessAnimation();
+
+  elements.successPopup.style.display = "flex";
+}
+
+async function handleCheckPlate() {
+  const plate = normalizePlate(elements.plateInput.value);
+
+  showLoading();
+  
+  if (!plate) {
+    showMessage("No license plate provided. Please enter a license plate and try again to search for a vehicle.");
+    return;
+  }
+  
+  const { data, error } = await getUnpaidCarByPlate(plate);
+
+  if (error) {
+    console.error("Грешка:", error);
+    return;
+  }
+  
   if (!data.length) {
     showMessage(`Cannot find a vehicle with the provided license plate <strong>${plate}</strong>. Please check the license plate and try again.`);
     return;
   }
-
+  
   const car = data[0];
   const entryTime = new Date(car.time_in);
-
   const { parkingFee, durationText, now } = calculateFee(entryTime);
-
+  
   renderCarInfo(car, entryTime, durationText, parkingFee);
-
-  payBtn.innerHTML = `PAY ${parkingFee.toFixed(2)}€`;
-
-  payBtn.onclick = () => handlePayment(car, parkingFee, now);
-
-});
+  
+  elements.payBtn.innerHTML = `PAY ${parkingFee.toFixed(2)}€`;
+  elements.payBtn.onclick = () => handlePayment(car, parkingFee, now);
+}
